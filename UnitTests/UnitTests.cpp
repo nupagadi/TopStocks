@@ -9,6 +9,8 @@ namespace top_stocks
 namespace tests
 {
 
+void Add20Stocks(TopStocksHandlerMock& aMock, TopStocks& aTopStocks);
+
 void ShouldCalcPropperPercent()
 {
     TopStocksHandlerMock mock;
@@ -119,86 +121,162 @@ void ShouldReturnTopTen()
     TopStocksHandlerMock mock;
     TopStocks topStocks(mock);
 
-    mock.ExpectGainers({{{1, 0}}});
-    mock.ExpectLosers({{{1, 0}}});
-    topStocks.OnQuote(1, 10);
+    Add20Stocks(mock, topStocks);
+}
 
-    mock.ExpectGainers({{{2, 0}, {1, 0}}});
-    mock.ExpectLosers({{{1, 0}, {2, 0}}});
-    topStocks.OnQuote(2, 20);
+void Add20Stocks(TopStocksHandlerMock& aMock, TopStocks& aTopStocks)
+{
+    aMock.ExpectGainers({{{1, 0}}});
+    aMock.ExpectLosers({{{1, 0}}});
+    aTopStocks.OnQuote(1, 10);
 
-    mock.ExpectGainers({{
-        {3, 0}, {2, 0}, {1, 0}
-    }});
-    mock.ExpectLosers({{
-        {1, 0}, {2, 0}, {3, 0}
-    }});
-    topStocks.OnQuote(3, 30);
+    aMock.ExpectGainers({{{2, 0}, {1, 0}}});
+    aMock.ExpectLosers({{{1, 0}, {2, 0}}});
+    aTopStocks.OnQuote(2, 20);
 
-    mock.ExpectGainers({{
-        {4, 0}, {3, 0}, {2, 0}, {1, 0}
+    aMock.ExpectGainers({{
+        {3, 0}, {2, 0}, {1, 0},
     }});
-    mock.ExpectLosers({{
-        {1, 0}, {2, 0}, {3, 0}, {4, 0}
+    aMock.ExpectLosers({{
+        {1, 0}, {2, 0}, {3, 0},
     }});
-    topStocks.OnQuote(4, 40);
+    aTopStocks.OnQuote(3, 30);
 
-    mock.ExpectGainers({{
-        {5, 0}, {4, 0}, {3, 0}, {2, 0}, {1, 0}
+    aMock.ExpectGainers({{
+        {4, 0}, {3, 0}, {2, 0}, {1, 0},
     }});
-    mock.ExpectLosers({{
-        {1, 0}, {2, 0}, {3, 0}, {4, 0}, {5, 0}
+    aMock.ExpectLosers({{
+        {1, 0}, {2, 0}, {3, 0}, {4, 0},
     }});
-    topStocks.OnQuote(5, 50);
+    aTopStocks.OnQuote(4, 40);
 
-    mock.ExpectGainers({{
-        {6, 0}, {5, 0}, {4, 0}, {3, 0}, {2, 0}, {1, 0}
+    aMock.ExpectGainers({{
+        {5, 0}, {4, 0}, {3, 0}, {2, 0}, {1, 0},
     }});
-    mock.ExpectLosers({{
-        {1, 0}, {2, 0}, {3, 0}, {4, 0}, {5, 0}, {6, 0}
+    aMock.ExpectLosers({{
+        {1, 0}, {2, 0}, {3, 0}, {4, 0}, {5, 0},
     }});
-    topStocks.OnQuote(6, 60);
+    aTopStocks.OnQuote(5, 50);
 
-    mock.ExpectGainers({{
-        {7, 0}, {6, 0}, {5, 0}, {4, 0}, {3, 0}, {2, 0}, {1, 0}
+    aMock.ExpectGainers({{
+        {6, 0}, {5, 0}, {4, 0}, {3, 0}, {2, 0}, {1, 0},
     }});
-    mock.ExpectLosers({{
-        {1, 0}, {2, 0}, {3, 0}, {4, 0}, {5, 0}, {6, 0}, {7, 0}
+    aMock.ExpectLosers({{
+        {1, 0}, {2, 0}, {3, 0}, {4, 0}, {5, 0}, {6, 0},
     }});
-    topStocks.OnQuote(7, 70);
+    aTopStocks.OnQuote(6, 60);
 
-    mock.ExpectGainers({{
-        {8, 0}, {7, 0}, {6, 0}, {5, 0}, {4, 0}, {3, 0}, {2, 0}, {1, 0}
+    aMock.ExpectGainers({{
+        {7, 0}, {6, 0}, {5, 0}, {4, 0}, {3, 0}, {2, 0}, {1, 0},
     }});
-    mock.ExpectLosers({{
-        {1, 0}, {2, 0}, {3, 0}, {4, 0}, {5, 0}, {6, 0}, {7, 0}, {8, 0}
+    aMock.ExpectLosers({{
+        {1, 0}, {2, 0}, {3, 0}, {4, 0}, {5, 0}, {6, 0}, {7, 0},
     }});
-    topStocks.OnQuote(8, 80);
+    aTopStocks.OnQuote(7, 70);
 
-    mock.ExpectGainers({{
-        {9, 0}, {8, 0}, {7, 0}, {6, 0}, {5, 0}, {4, 0}, {3, 0}, {2, 0}, {1, 0}
+    aMock.ExpectGainers({{
+        {8, 0}, {7, 0}, {6, 0}, {5, 0}, {4, 0}, {3, 0}, {2, 0}, {1, 0},
     }});
-    mock.ExpectLosers({{
-        {1, 0}, {2, 0}, {3, 0}, {4, 0}, {5, 0}, {6, 0}, {7, 0}, {8, 0}, {9, 0}
+    aMock.ExpectLosers({{
+        {1, 0}, {2, 0}, {3, 0}, {4, 0}, {5, 0}, {6, 0}, {7, 0}, {8, 0},
     }});
-    topStocks.OnQuote(9, 90);
+    aTopStocks.OnQuote(8, 80);
 
-    mock.ExpectGainers({{
-        {10, 0}, {9, 0}, {8, 0}, {7, 0}, {6, 0}, {5, 0}, {4, 0}, {3, 0}, {2, 0}, {1, 0}
+    aMock.ExpectGainers({{
+        {9, 0}, {8, 0}, {7, 0}, {6, 0}, {5, 0}, {4, 0}, {3, 0}, {2, 0}, {1, 0},
     }});
-    mock.ExpectLosers({{
-        {1, 0}, {2, 0}, {3, 0}, {4, 0}, {5, 0}, {6, 0}, {7, 0}, {8, 0}, {9, 0}, {10, 0}
+    aMock.ExpectLosers({{
+        {1, 0}, {2, 0}, {3, 0}, {4, 0}, {5, 0}, {6, 0}, {7, 0}, {8, 0}, {9, 0},
     }});
-    topStocks.OnQuote(10, 100);
+    aTopStocks.OnQuote(9, 90);
 
-    mock.ExpectGainers({{
-        {11, 0}, {10, 0}, {9, 0}, {8, 0}, {7, 0}, {6, 0}, {5, 0}, {4, 0}, {3, 0}, {2, 0}
+    aMock.ExpectGainers({{
+        {10, 0}, {9, 0}, {8, 0}, {7, 0}, {6, 0}, {5, 0}, {4, 0}, {3, 0}, {2, 0}, {1, 0},
     }});
-    mock.ExpectLosers({{
-        {1, 0}, {2, 0}, {3, 0}, {4, 0}, {5, 0}, {6, 0}, {7, 0}, {8, 0}, {9, 0}, {10, 0}
+    aMock.ExpectLosers({{
+        {1, 0}, {2, 0}, {3, 0}, {4, 0}, {5, 0}, {6, 0}, {7, 0}, {8, 0}, {9, 0}, {10, 0},
     }});
-    topStocks.OnQuote(11, 110);
+    aTopStocks.OnQuote(10, 100);
 
+    aMock.ExpectGainers({{
+        {11, 0}, {10, 0}, {9, 0}, {8, 0}, {7, 0}, {6, 0}, {5, 0}, {4, 0}, {3, 0}, {2, 0},
+    }});
+    aMock.ExpectLosers({{
+        {1, 0}, {2, 0}, {3, 0}, {4, 0}, {5, 0}, {6, 0}, {7, 0}, {8, 0}, {9, 0}, {10, 0},
+    }});
+    aTopStocks.OnQuote(11, 110);
+
+    aMock.ExpectGainers({{
+        {12, 0}, {11, 0}, {10, 0}, {9, 0}, {8, 0}, {7, 0}, {6, 0}, {5, 0}, {4, 0}, {3, 0},
+    }});
+    aMock.ExpectLosers({{
+        {1, 0}, {2, 0}, {3, 0}, {4, 0}, {5, 0}, {6, 0}, {7, 0}, {8, 0}, {9, 0}, {10, 0},
+    }});
+    aTopStocks.OnQuote(12, 120);
+
+    aMock.ExpectGainers({{
+        {13, 0}, {12, 0}, {11, 0}, {10, 0}, {9, 0}, {8, 0}, {7, 0}, {6, 0}, {5, 0}, {4, 0},
+    }});
+    aMock.ExpectLosers({{
+        {1, 0}, {2, 0}, {3, 0}, {4, 0}, {5, 0}, {6, 0}, {7, 0}, {8, 0}, {9, 0}, {10, 0},
+    }});
+    aTopStocks.OnQuote(13, 130);
+
+    aMock.ExpectGainers({{
+        {14, 0}, {13, 0}, {12, 0}, {11, 0}, {10, 0}, {9, 0}, {8, 0}, {7, 0}, {6, 0}, {5, 0},
+    }});
+    aMock.ExpectLosers({{
+        {1, 0}, {2, 0}, {3, 0}, {4, 0}, {5, 0}, {6, 0}, {7, 0}, {8, 0}, {9, 0}, {10, 0},
+    }});
+    aTopStocks.OnQuote(14, 140);
+
+    aMock.ExpectGainers({{
+        {15, 0}, {14, 0}, {13, 0}, {12, 0}, {11, 0}, {10, 0}, {9, 0}, {8, 0}, {7, 0}, {6, 0},
+    }});
+    aMock.ExpectLosers({{
+        {1, 0}, {2, 0}, {3, 0}, {4, 0}, {5, 0}, {6, 0}, {7, 0}, {8, 0}, {9, 0}, {10, 0},
+    }});
+    aTopStocks.OnQuote(15, 150);
+
+    aMock.ExpectGainers({{
+        {16, 0}, {15, 0}, {14, 0}, {13, 0}, {12, 0}, {11, 0}, {10, 0}, {9, 0}, {8, 0}, {7, 0},
+    }});
+    aMock.ExpectLosers({{
+        {1, 0}, {2, 0}, {3, 0}, {4, 0}, {5, 0}, {6, 0}, {7, 0}, {8, 0}, {9, 0}, {10, 0},
+    }});
+    aTopStocks.OnQuote(16, 160);
+
+    aMock.ExpectGainers({{
+        {17, 0}, {16, 0}, {15, 0}, {14, 0}, {13, 0}, {12, 0}, {11, 0}, {10, 0}, {9, 0}, {8, 0},
+    }});
+    aMock.ExpectLosers({{
+        {1, 0}, {2, 0}, {3, 0}, {4, 0}, {5, 0}, {6, 0}, {7, 0}, {8, 0}, {9, 0}, {10, 0},
+    }});
+    aTopStocks.OnQuote(17, 170);
+
+    aMock.ExpectGainers({{
+        {18, 0}, {17, 0}, {16, 0}, {15, 0}, {14, 0}, {13, 0}, {12, 0}, {11, 0}, {10, 0}, {9, 0},
+    }});
+    aMock.ExpectLosers({{
+        {1, 0}, {2, 0}, {3, 0}, {4, 0}, {5, 0}, {6, 0}, {7, 0}, {8, 0}, {9, 0}, {10, 0},
+    }});
+    aTopStocks.OnQuote(18, 180);
+
+    aMock.ExpectGainers({{
+        {19, 0}, {18, 0}, {17, 0}, {16, 0}, {15, 0}, {14, 0}, {13, 0}, {12, 0}, {11, 0}, {10, 0},
+    }});
+    aMock.ExpectLosers({{
+        {1, 0}, {2, 0}, {3, 0}, {4, 0}, {5, 0}, {6, 0}, {7, 0}, {8, 0}, {9, 0}, {10, 0},
+    }});
+    aTopStocks.OnQuote(19, 190);
+
+    aMock.ExpectGainers({{
+        {20, 0}, {19, 0}, {18, 0}, {17, 0}, {16, 0}, {15, 0}, {14, 0}, {13, 0}, {12, 0}, {11, 0},
+    }});
+    aMock.ExpectLosers({{
+        {1, 0}, {2, 0}, {3, 0}, {4, 0}, {5, 0}, {6, 0}, {7, 0}, {8, 0}, {9, 0}, {10, 0},
+    }});
+    aTopStocks.OnQuote(20, 200);
 }
 
 }
