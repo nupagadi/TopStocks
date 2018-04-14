@@ -23,6 +23,7 @@ struct TopStocksHandlerMock : ITopStocksHandler
     {
         assert(mWasGainersExpectationMet);
         mWasGainersExpectationMet = false;
+        mShouldGainersChanged = true;
         mGainers = aExpect;
     }
 
@@ -30,17 +31,34 @@ struct TopStocksHandlerMock : ITopStocksHandler
     {
         assert(mWasLosersExpectationMet);
         mWasLosersExpectationMet = false;
+        mShouldLosersChanged = true;
         mLosers = aExpect;
+    }
+
+    void ExpectGainersPersist()
+    {
+        assert(mWasGainersExpectationMet);
+
+        mShouldGainersChanged = false;
+    }
+
+    void ExpectLosersPersist()
+    {
+        assert(mWasLosersExpectationMet);
+
+        mShouldLosersChanged = false;
     }
 
     void ProcessTopGainersChanged(const TTopList& aChanged) override
     {
+        assert(mShouldGainersChanged);
         mWasGainersExpectationMet = true;
         assert(AreEqual(mGainers, aChanged) || Print(mGainers, aChanged));
     }
 
     void ProcessTopLosersChanged(const TTopList& aChanged) override
     {
+        assert(mShouldLosersChanged);
         mWasLosersExpectationMet = true;
         assert(AreEqual(mLosers, aChanged) || Print(mLosers, aChanged));
     }
@@ -92,6 +110,9 @@ private:
 
     bool mWasGainersExpectationMet = true;
     bool mWasLosersExpectationMet = true;
+
+    bool mShouldGainersChanged = false;
+    bool mShouldLosersChanged = false;
 };
 
 }
