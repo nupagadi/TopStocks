@@ -26,40 +26,43 @@ struct TopProcessor
 
     void Process(TId aStockId, TChange aOldPercent, TChange aNewPercent)
     {
-        if (mContainer.key_comp()({aOldPercent, 0}, {mThreshold, 0}))
+        if (!mContainer.key_comp()({mThreshold, 0}, {aOldPercent, 0}))
         {
-            auto gr = mContainer.erase({aOldPercent, aStockId});
-            assert(gr == 1);
+            mContainer.erase({aOldPercent, aStockId});
         }
 
-        if (mContainer.key_comp()({aNewPercent, 0}, {mThreshold, 0}))
+        if (!mContainer.key_comp()({mThreshold, 0}, {aNewPercent, 0}))
         {
             mContainer.emplace(aNewPercent, aStockId);
         }
 
-        if (mContainer.key_comp()({aOldPercent, 0}, {mTopThreshold, 0})
-            || mContainer.key_comp()({aNewPercent, 0}, {mTopThreshold, 0}))
+        if (!mContainer.key_comp()({mTopThreshold, 0}, {aOldPercent, 0})
+            || !mContainer.key_comp()({mTopThreshold, 0}, {aNewPercent, 0}))
         {
-            auto getTop = [](auto& from, auto& to)
-            {
-                auto it = from.cbegin();
-                size_t i = 0;
-                for (; i < to.size() && it != from.cend(); ++i, ++it)
-                {
-                    to[i] = {it->second, it->first};
-                }
-
-                if (TopMaxCapacity < from.size())
-                {
-                    std::advance(it, TopMaxCapacity - i);
-                    from.erase(it, from.end());
-                }
-            };
-
             TTopList topList;
-            getTop(mContainer, topList);
+
+            assert(mContainer.size() >= TopSize);
+            size_t i = 0;
+            auto it = mContainer.cbegin();
+            for (; i < topList.size(); ++i, ++it)
+            {
+                topList[i] = {it->second, it->first};
+            }
+
+            if (TopMaxCapacity < mContainer.size())
+            {
+                std::advance(it, TopMaxCapacity - i - 1);
+                mThreshold = it->first;
+                mContainer.erase(++it, mContainer.end());
+            }
             mTopThreshold = topList.back().second;
-            mCallback(topList);
+
+            if (mContainer.key_comp()({aOldPercent, 0}, {mTopThreshold, 0})
+                || mContainer.key_comp()({aNewPercent, 0}, {mTopThreshold, 0})
+                || aOldPercent == mTopThreshold && mContainer.key_comp()({aOldPercent, 0}, {aNewPercent, 0}))
+            {
+                mCallback(topList);
+            }
         }
 
         assert(mContainer.size() <= TopMaxCapacity);
@@ -68,11 +71,23 @@ struct TopProcessor
     template <typename TMap>
     void Copy(const TMap& aMap)
     {
+        mContainer.clear();
         for (const auto& e : aMap)
         {
             mContainer.emplace(e.second.second, e.first);
+            mTopThreshold = mThreshold = e.second.second;
         }
         assert(mContainer.size() <= TopSize);
+
+        TTopList topList;
+        std::transform(mContainer.cbegin(), mContainer.cend(), topList.begin(),
+            [](const auto& e)
+            {
+                return TQuote{e.second, e.first};
+            }
+        );
+
+        mCallback(topList);
     }
 
 
@@ -144,7 +159,7 @@ struct TopStocks : ITopStocks
             newPercent = quote.second;
         }
 
-        if (mQuotes.size() < TopSize)
+        if (mQuotes.size() <= TopSize)
         {
             mGainers.Copy(mQuotes);
             mLosers.Copy(mQuotes);
