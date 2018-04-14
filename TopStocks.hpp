@@ -24,42 +24,65 @@ struct TopProcessor
 
     }
 
-    void Process(TId aStockId, TChange aOldPercent, TChange aNewPercent)
+    template <typename TMap>
+    void Process(TId aStockId, TChange aOldPercent, TChange aNewPercent, const TMap& aMap)
     {
-        if (!mContainer.key_comp()({mThreshold, 0}, {aOldPercent, 0}))
+        if (!TComparator<TChange>()(mThreshold, aOldPercent))
         {
             mContainer.erase({aOldPercent, aStockId});
         }
 
-        if (!mContainer.key_comp()({mThreshold, 0}, {aNewPercent, 0}))
+        if (!TComparator<TChange>()(mThreshold, aNewPercent))
         {
             mContainer.emplace(aNewPercent, aStockId);
         }
 
-        if (!mContainer.key_comp()({mTopThreshold, 0}, {aOldPercent, 0})
-            || !mContainer.key_comp()({mTopThreshold, 0}, {aNewPercent, 0}))
+        if (!TComparator<TChange>()(mTopThreshold, aOldPercent) || !TComparator<TChange>()(mTopThreshold, aNewPercent))
         {
             TTopList topList;
 
-            assert(mContainer.size() >= TopSize);
-            size_t i = 0;
-            auto it = mContainer.cbegin();
-            for (; i < topList.size(); ++i, ++it)
+            if (mContainer.size() >= TopSize)
             {
-                topList[i] = {it->second, it->first};
+                size_t i = 0;
+                auto it = mContainer.cbegin();
+                for (; i < topList.size(); ++i, ++it)
+                {
+                    topList[i] = {it->second, it->first};
+                }
+
+                if (TopMaxCapacity < mContainer.size())
+                {
+                    std::advance(it, TopMaxCapacity - i - 1);
+                    mThreshold = it->first;
+                    mContainer.erase(++it, mContainer.end());
+                }
+                mTopThreshold = topList.back().second;
+            }
+            else
+            {
+                // Assumed be rare or when there are a few stocks.
+                std::cout << "Warning: " << "Restoring the top." << std::endl;
+
+                assert(aMap.size() >= TopSize);
+                std::array<std::pair<TMap::key_type, TMap::mapped_type>, TopSize> temp;
+                auto mapComparator = [](const auto& l, const auto& r)
+                {
+                    return TComparator<std::pair<TChange, TId>>()(
+                        std::make_pair(l.second.second, l.first), std::make_pair(r.second.second, r.first));
+                };
+
+                std::partial_sort_copy(aMap.cbegin(), aMap.cend(), temp.begin(), temp.end(), mapComparator);
+                std::transform(temp.cbegin(), temp.cend(), topList.begin(),
+                    [](const auto& e)
+                    {
+                        return TQuote{e.first, e.second.second};
+                    }
+                );
             }
 
-            if (TopMaxCapacity < mContainer.size())
-            {
-                std::advance(it, TopMaxCapacity - i - 1);
-                mThreshold = it->first;
-                mContainer.erase(++it, mContainer.end());
-            }
-            mTopThreshold = topList.back().second;
-
-            if (mContainer.key_comp()({aOldPercent, 0}, {mTopThreshold, 0})
-                || mContainer.key_comp()({aNewPercent, 0}, {mTopThreshold, 0})
-                || aOldPercent == mTopThreshold && mContainer.key_comp()({aOldPercent, 0}, {aNewPercent, 0}))
+            if (TComparator<TChange>()(aOldPercent, mTopThreshold)
+                || TComparator<TChange>()(aNewPercent, mTopThreshold)
+                || aOldPercent == mTopThreshold && TComparator<TChange>()(aOldPercent, aNewPercent))
             {
                 mCallback(topList);
             }
@@ -166,8 +189,8 @@ struct TopStocks : ITopStocks
         }
         else
         {
-            mGainers.Process(aStockId, oldPercent, newPercent);
-            mLosers.Process(aStockId, oldPercent, newPercent);
+            mGainers.Process(aStockId, oldPercent, newPercent, mQuotes);
+            mLosers.Process(aStockId, oldPercent, newPercent, mQuotes);
         }
     }
 
