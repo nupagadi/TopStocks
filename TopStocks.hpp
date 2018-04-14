@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cassert>
+#include <iterator>
 #include <functional>
 #include <set>
 #include <unordered_map>
@@ -10,10 +11,93 @@
 namespace top_stocks
 {
 
+template <template <typename> typename TComparator>
+struct TopProcessor
+{
+    using TCallback = std::function<void(const TTopList&)>;
+
+    TopProcessor(TChange aInitialThreshold, TCallback aCallback)
+        : mThreshold(aInitialThreshold)
+        , mTopThreshold(aInitialThreshold)
+        , mCallback(aCallback)
+    {
+
+    }
+
+    void Process(TId aStockId, TChange aOldPercent, TChange aNewPercent)
+    {
+        if (mContainer.key_comp()({aOldPercent, 0}, {mThreshold, 0}))
+        {
+            auto gr = mContainer.erase({aOldPercent, aStockId});
+            assert(gr == 1);
+        }
+
+        if (mContainer.key_comp()({aNewPercent, 0}, {mThreshold, 0}))
+        {
+            mContainer.emplace(aNewPercent, aStockId);
+        }
+
+        if (mContainer.key_comp()({aOldPercent, 0}, {mTopThreshold, 0})
+            || mContainer.key_comp()({aNewPercent, 0}, {mTopThreshold, 0}))
+        {
+            auto getTop = [](auto& from, auto& to)
+            {
+                auto it = from.cbegin();
+                size_t i = 0;
+                for (; i < to.size() && it != from.cend(); ++i, ++it)
+                {
+                    to[i] = {it->second, it->first};
+                }
+
+                if (TopMaxCapacity < from.size())
+                {
+                    std::advance(it, TopMaxCapacity - i);
+                    from.erase(it, from.end());
+                }
+            };
+
+            TTopList topList;
+            getTop(mContainer, topList);
+            mTopThreshold = topList.back().second;
+            mCallback(topList);
+        }
+
+        assert(mContainer.size() <= TopMaxCapacity);
+    }
+
+    template <typename TMap>
+    void Copy(const TMap& aMap)
+    {
+        for (const auto& e : aMap)
+        {
+            mContainer.emplace(e.second.second, e.first);
+        }
+        assert(mContainer.size() <= TopSize);
+    }
+
+
+private:
+
+    using TTopElement = std::pair<TChange, TId>;
+
+    std::set<TTopElement, TComparator<TTopElement>> mContainer;
+
+    TChange mThreshold {};
+    TChange mTopThreshold {};
+
+    std::function<void(const TTopList&)> mCallback;
+
+    static const constexpr size_t TopMaxCapacity = 16;
+};
+
 struct TopStocks : ITopStocks
 {
     TopStocks(ITopStocksHandler& aHandler)
         : mHander(aHandler)
+        , mGainers(std::numeric_limits<TChange>::min(),
+            std::bind(&ITopStocksHandler::ProcessTopGainersChanged, std::ref(mHander), std::placeholders::_1))
+        , mLosers(std::numeric_limits<TChange>::max(),
+            std::bind(&ITopStocksHandler::ProcessTopLosersChanged, std::ref(mHander), std::placeholders::_1))
     {
 
     }
@@ -24,6 +108,8 @@ struct TopStocks : ITopStocks
         {
             return;
         }
+
+        TChange oldPercent = 0, newPercent = 0;
 
         auto quoteIterator = mQuotes.find(aStockId);
         if (quoteIterator == mQuotes.cend())
@@ -47,41 +133,27 @@ struct TopStocks : ITopStocks
                 quote.first = 0;
             }
 
-            TChange old;
             if (quote.first)
             {
-                old = std::exchange(quote.second, (aPrice - quote.first) / quote.first * 100);
+                oldPercent = std::exchange(quote.second, (aPrice - quote.first) / quote.first * 100);
             }
             else
             {
-                old = std::exchange(quote.second, 0);
+                oldPercent = std::exchange(quote.second, 0);
             }
-
-            auto gr = mGainers.erase({old, aStockId});
-            assert(gr == 1);
-            auto lr = mLosers.erase({old, aStockId});
-            assert(lr == 1);
+            newPercent = quote.second;
         }
 
-        mGainers.emplace(quoteIterator->second.second, aStockId);
-        mLosers.emplace(quoteIterator->second.second, aStockId);
-
-        TTopList gainers;
-        TTopList losers;
-        auto getTop = [](const auto& from, auto& to)
+        if (mQuotes.size() < TopSize)
         {
-            auto it = from.cbegin();
-            for (size_t i = 0; i < to.size() && it != from.cend(); ++i, ++it)
-            {
-                to[i] = {it->second, it->first};
-            }
-        };
-
-        getTop(mGainers, gainers);
-        getTop(mLosers, losers);
-
-        mHander.ProcessTopGainersChanged(gainers);
-        mHander.ProcessTopLosersChanged(losers);
+            mGainers.Copy(mQuotes);
+            mLosers.Copy(mQuotes);
+        }
+        else
+        {
+            mGainers.Process(aStockId, oldPercent, newPercent);
+            mLosers.Process(aStockId, oldPercent, newPercent);
+        }
     }
 
 private:
@@ -90,11 +162,8 @@ private:
 
     std::unordered_map<TId, std::pair<TBase, TChange>> mQuotes;
 
-    using TTopElement = std::pair<TChange, TId>;
-    template <template <typename> typename TComparator>
-    using TTop = std::set<TTopElement, TComparator<TTopElement>>;
-    TTop<std::greater> mGainers;
-    TTop<std::less> mLosers;
+    TopProcessor<std::greater> mGainers;
+    TopProcessor<std::less> mLosers;
 };
 
 }

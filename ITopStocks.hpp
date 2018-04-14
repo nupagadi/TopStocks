@@ -11,7 +11,8 @@ using TBase = double;
 using TChange = double;
 
 using TQuote = std::pair<TId, TChange>;
-using TTopList = std::array<TQuote, 10>;
+const constexpr size_t TopSize = 10;
+using TTopList = std::array<TQuote, TopSize>;
 
 struct ITopStocks
 {
