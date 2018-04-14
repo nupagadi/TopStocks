@@ -70,13 +70,11 @@ struct TopStocks : ITopStocks
         TTopList losers;
         auto getTop = [](const auto& from, auto& to)
         {
-            std::transform(from.cbegin(), from.cend(), to.begin(),
-                [](const auto& e)
-                {
-                    return TQuote{e.second, e.first};
-                }
-            );
-
+            auto it = from.cbegin();
+            for (size_t i = 0; i < to.size() && it != from.cend(); ++i, ++it)
+            {
+                to[i] = {it->second, it->first};
+            }
         };
 
         getTop(mGainers, gainers);
