@@ -1,4 +1,4 @@
-The project contains two executables: UnitTests and Display. The former launches all the unit tests, the latter - simple display unit, which shows top rankers using implemented TopStocks class.
+The project contains two executables: UnitTests and Display. The former launches all the unit tests, the latter - simple display unit, which shows top rankers using implemented TopStocks class. 
 
 Implementation
 
@@ -11,3 +11,5 @@ Sometimes when there are many elements with the same percent value in the top (e
 Complexity
 
 The algorithm was developed under the assumption that the top rankers seldom massively leaves the chart. If that's the case the complexity of the algorithm is const (the cost of adding or removing from the red-black tree with the size limited to 16). Otherwise the topmost is reset and the complexity of this operation is O(N).
+
+Used Tools: MS Visual C++ Compiler 14.0 x86, Qt Creator 4.1, Windows 7 x32.
