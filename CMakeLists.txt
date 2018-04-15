@@ -7,4 +7,4 @@ set(SOURCES
 )
 
 add_subdirectory(UnitTests)
-add_subdirectory(IntegrationTest)
+add_subdirectory(Display)
