@@ -78,6 +78,12 @@ struct TopProcessor
                         return TQuote{e.first, e.second.second};
                     }
                 );
+
+                mContainer.clear();
+                for (const auto& e : temp)
+                {
+                    mContainer.emplace(e.second.second, e.first);
+                }
             }
 
             if (TComparator<TChange>()(aOldPercent, mTopThreshold)
@@ -87,8 +93,6 @@ struct TopProcessor
                 mCallback(topList);
             }
         }
-
-        assert(mContainer.size() <= TopMaxCapacity);
     }
 
     template <typename TMap>

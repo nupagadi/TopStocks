@@ -74,8 +74,11 @@ private:
                 return false;
             }
 
-            if (std::abs(aExpected[i].second - aActual[i].second) > Epsilon)
+            if (std::fabs(aExpected[i].second - aActual[i].second) > Epsilon)
             {
+                std::cout << "Expected: " << aExpected[i].first << " ; " << aExpected[i].second << std::endl;
+                std::cout << "Actual: " << aExpected[i].first << " ; " << aExpected[i].second << std::endl;
+                std::cout << "Diff:" << aExpected[i].second - aActual[i].second << std::endl;
                 return false;
             }
         }
